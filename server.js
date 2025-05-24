@@ -10,6 +10,7 @@ const db = require('./database/connection');
 // Import routes
 const visitorRoutes = require('./routes/visitors');
 const employeeRoutes = require('./routes/employees');
+const approvalRoutes = require('./routes/approvals');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/visitors', visitorRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/approvals', approvalRoutes);
 
 // Test database connection
 app.get('/test-db', async (req, res) => {

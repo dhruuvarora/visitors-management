@@ -47,6 +47,12 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
+app.get('/health', (req,res) =>{
+  res.json({
+    message:"App is Healthy"
+  })
+})
+
 // Basic route
 app.get('/', (req, res) => {
   res.json({ 

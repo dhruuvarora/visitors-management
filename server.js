@@ -12,6 +12,7 @@ const visitorRoutes = require('./routes/visitors');
 const employeeRoutes = require('./routes/employees');
 const approvalRoutes = require('./routes/approvals');
 const preApprovalRoutes = require('./routes/preApprovals');
+const testEmailRoutes = require('./routes/testEmail');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,7 @@ app.use('/api/visitors', visitorRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/preapprovals', preApprovalRoutes);
+app.use('/api/test-email', testEmailRoutes);
 
 // Test database connection
 app.get('/test-db', async (req, res) => {

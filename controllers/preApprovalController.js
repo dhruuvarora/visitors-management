@@ -1,4 +1,6 @@
+// controllers/preApprovalController.js
 const QRCode = require('qrcode');
+const emailService = require('../services/emailService'); // Import email service
 const db = require('../database/connection');
 
 // Initialize models
@@ -53,7 +55,8 @@ const createPreApprovedVisitor = async (req, res) => {
     if (arrivalStart <= now) {
       return res.status(400).json({ error: 'Scheduled arrival time must be in the future' });
     }
-     // Check daily visitor limit for employee
+
+    // Check daily visitor limit for employee
     const visitDateObj = new Date(visitDate);
     const startOfDay = new Date(visitDateObj);
     startOfDay.setHours(0, 0, 0, 0);
@@ -105,7 +108,8 @@ const createPreApprovedVisitor = async (req, res) => {
       created_at: new Date(),
       updated_at: new Date()
     };
-     const newVisitor = await visitorModel.create(visitorData);
+
+    const newVisitor = await visitorModel.create(visitorData);
 
     // Generate QR code with pre-approval data
     const qrData = {
@@ -121,7 +125,8 @@ const createPreApprovedVisitor = async (req, res) => {
     
     const qrCodeUrl = await QRCode.toDataURL(JSON.stringify(qrData));
 
-    res.status(201).json({
+    // Prepare response data
+    const responseData = {
       message: 'Visitor pre-approved successfully',
       visitor: {
         id: newVisitor.id,
@@ -139,14 +144,37 @@ const createPreApprovedVisitor = async (req, res) => {
       preApprovalToken: preApprovalToken,
       qrCode: qrCodeUrl,
       quickCheckinUrl: `/api/visitors/quick-checkin/${preApprovalToken}`,
-      instructions: 'Visitor can use QR code or token for quick check-in during the scheduled window'
-    });
+      instructions: 'Visitor can use QR code or token for quick check-in during the scheduled window',
+      emailSent: false
+    };
+
+    // Send pre-approval email to visitor if email is provided
+    if (email) {
+      try {
+        const visitorDataForEmail = {
+          ...visitorData,
+          hostEmployeeName: employee.name,
+          hostDepartment: employee.department
+        };
+        
+        await emailService.sendPreApprovalEmail(visitorDataForEmail, qrCodeUrl);
+        console.log(`✅ Pre-approval email sent to: ${email}`);
+        responseData.emailSent = true;
+      } catch (emailError) {
+        console.error('❌ Failed to send pre-approval email:', emailError);
+        responseData.emailError = 'Failed to send email notification';
+      }
+    }
+
+    res.status(201).json(responseData);
 
   } catch (error) {
     console.error('Error creating pre-approved visitor:', error);
     res.status(500).json({ error: 'Failed to create pre-approved visitor' });
   }
 };
+
+// Get employee's pre-approved visitors (unchanged from your original)
 const getEmployeePreApprovedVisitors = async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -247,7 +275,7 @@ const getEmployeePreApprovedVisitors = async (req, res) => {
   }
 };
 
-// Check employee's daily pre-approval limits
+// Check employee's daily pre-approval limits (unchanged)
 const checkPreApprovalLimits = async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -309,7 +337,7 @@ const checkPreApprovalLimits = async (req, res) => {
   }
 };
 
-// Update pre-approved visitor
+// Update pre-approved visitor with email notification
 const updatePreApprovedVisitor = async (req, res) => {
   try {
     const { employeeId, visitorId } = req.params;
@@ -367,7 +395,8 @@ const updatePreApprovedVisitor = async (req, res) => {
     // Get updated visitor data
     const updatedVisitor = await visitorModel.findById(parseInt(visitorId));
 
-    res.json({
+    // Prepare response data
+    const responseData = {
       message: 'Pre-approved visitor updated successfully',
       visitor: {
         id: updatedVisitor.id,
@@ -379,8 +408,46 @@ const updatePreApprovedVisitor = async (req, res) => {
           start: updatedVisitor.scheduled_arrival_start,
           end: updatedVisitor.scheduled_arrival_end
         }
+      },
+      emailSent: false
+    };
+
+    // Send updated email notification if significant changes were made and visitor has email
+    const significantFields = ['scheduledArrivalStart', 'scheduledArrivalEnd', 'visitDate'];
+    const hasSignificantChanges = significantFields.some(field => updateData[field]);
+    
+    if (hasSignificantChanges && updatedVisitor.email) {
+      try {
+        // Generate new QR code with updated data
+        const qrData = {
+          visitorId: updatedVisitor.id,
+          badgeId: updatedVisitor.visitor_badge_id,
+          name: updatedVisitor.full_name,
+          preApproved: true,
+          token: updatedVisitor.approval_token,
+          validFrom: updatedVisitor.scheduled_arrival_start,
+          validUntil: updatedVisitor.scheduled_arrival_end,
+          hostEmployee: employee.name
+        };
+        
+        const qrCodeUrl = await QRCode.toDataURL(JSON.stringify(qrData));
+        
+        const visitorDataForEmail = {
+          ...updatedVisitor,
+          hostEmployeeName: employee.name,
+          hostDepartment: employee.department
+        };
+        
+        await emailService.sendPreApprovalEmail(visitorDataForEmail, qrCodeUrl);
+        console.log(`✅ Updated pre-approval email sent to: ${updatedVisitor.email}`);
+        responseData.emailSent = true;
+      } catch (emailError) {
+        console.error('❌ Failed to send updated pre-approval email:', emailError);
+        responseData.emailError = 'Failed to send email notification';
       }
-    });
+    }
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error updating pre-approved visitor:', error);
@@ -388,7 +455,7 @@ const updatePreApprovedVisitor = async (req, res) => {
   }
 };
 
-// Cancel pre-approved visitor
+// Cancel pre-approved visitor (unchanged)
 const cancelPreApprovedVisitor = async (req, res) => {
   try {
     const { employeeId, visitorId } = req.params;
@@ -414,23 +481,41 @@ const cancelPreApprovedVisitor = async (req, res) => {
       return res.status(400).json({ error: 'Can only cancel pre-approved visitors' });
     }
 
+    const cancellationReason = reason || 'Cancelled by host employee';
+
     // Update visitor status to cancelled
     await visitorModel.update(parseInt(visitorId), {
       status: 'cancelled',
-      rejection_reason: reason || 'Cancelled by host employee',
+      rejection_reason: cancellationReason,
       updated_at: new Date()
     });
 
-    res.json({
+    // Prepare response data
+    const responseData = {
       message: 'Pre-approved visitor cancelled successfully',
       visitor: {
         id: visitor.id,
         name: visitor.full_name,
         badgeId: visitor.visitor_badge_id,
         status: 'cancelled',
-        reason: reason || 'Cancelled by host employee'
+        reason: cancellationReason
+      },
+      emailSent: false
+    };
+
+    // Send cancellation email (similar to rejection email)
+    if (visitor.email) {
+      try {
+        await emailService.sendRejectionEmail(visitor, cancellationReason);
+        console.log(`✅ Cancellation email sent to: ${visitor.email}`);
+        responseData.emailSent = true;
+      } catch (emailError) {
+        console.error('❌ Failed to send cancellation email:', emailError);
+        responseData.emailError = 'Failed to send email notification';
       }
-    });
+    }
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error cancelling pre-approved visitor:', error);

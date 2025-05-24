@@ -1,12 +1,14 @@
+// controllers/approvalController.js
+
 const db = require('../database/connection');  
 const QRCode = require('qrcode');
+const emailService = require('../services/emailService'); // Import your email service
 
 const VisitorModel = require('../models/Visitor');  
 const EmployeeModel = require('../models/Employee'); 
 
 const visitorModel = new VisitorModel(db);  
 const employeeModel = new EmployeeModel(db); 
-
 
 const approveVisitor = async (req, res) => {
   try {
@@ -54,12 +56,14 @@ const approveVisitor = async (req, res) => {
       visitorId: visitor.id,
       badgeId: visitor.visitor_badge_id,
       name: visitor.full_name,
-      approved: true
+      approved: true,
+      timestamp: new Date().toISOString()
     };
     
     const qrCodeUrl = await QRCode.toDataURL(JSON.stringify(qrData));
 
-    res.json({
+    // Prepare response data
+    const responseData = {
       message: 'Visitor approved successfully',
       visitor: {
         id: visitor.id,
@@ -69,8 +73,29 @@ const approveVisitor = async (req, res) => {
         approvedAt: new Date()
       },
       qrCode: qrCodeUrl,
-      checkInUrl: `/api/visitors/${visitor.id}/checkin`
-    });
+      checkInUrl: `/api/visitors/${visitor.id}/checkin`,
+      emailSent: false
+    };
+
+    // Send approval email to visitor if email is provided
+    if (visitor.email) {
+      try {
+        const visitorDataForEmail = {
+          ...visitor,
+          approval_remarks: remarks
+        };
+        
+        await emailService.sendApprovalEmail(visitorDataForEmail, qrCodeUrl);
+        console.log(`✅ Approval email sent to: ${visitor.email}`);
+        responseData.emailSent = true;
+      } catch (emailError) {
+        console.error('❌ Failed to send approval email:', emailError);
+        // Don't fail the approval if email fails, but log the error
+        responseData.emailError = 'Failed to send email notification';
+      }
+    }
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error approving visitor:', error);
@@ -101,16 +126,19 @@ const rejectVisitor = async (req, res) => {
       });
     }
 
+    const rejectionReason = reason || 'No reason provided';
+
     // Update visitor status to rejected
     await visitorModel.update(visitor.id, {
       status: 'rejected',
       rejected_at: new Date(),
-      rejection_reason: reason || 'No reason provided',
+      rejection_reason: rejectionReason,
       approval_token: null, 
       updated_at: new Date()
     });
 
-    res.json({
+    // Prepare response data
+    const responseData = {
       message: 'Visitor request rejected',
       visitor: {
         id: visitor.id,
@@ -118,9 +146,25 @@ const rejectVisitor = async (req, res) => {
         badgeId: visitor.visitor_badge_id,
         status: 'rejected',
         rejectedAt: new Date(),
-        reason: reason || 'No reason provided'
+        reason: rejectionReason
+      },
+      emailSent: false
+    };
+
+    // Send rejection email to visitor if email is provided
+    if (visitor.email) {
+      try {
+        await emailService.sendRejectionEmail(visitor, rejectionReason);
+        console.log(`✅ Rejection email sent to: ${visitor.email}`);
+        responseData.emailSent = true;
+      } catch (emailError) {
+        console.error('❌ Failed to send rejection email:', emailError);
+        // Don't fail the rejection if email fails, but log the error
+        responseData.emailError = 'Failed to send email notification';
       }
-    });
+    }
+
+    res.json(responseData);
 
   } catch (error) {
     console.error('Error rejecting visitor:', error);
@@ -128,7 +172,7 @@ const rejectVisitor = async (req, res) => {
   }
 };
 
-// Get visitors by status
+// Get visitors by status (unchanged)
 const getVisitorsByStatus = async (req, res) => {
   try {
     const { status } = req.params;
@@ -225,7 +269,7 @@ const getPendingApprovals = async (req, res) => {
   }
 };
 
-// Clean up expired approval requests
+// Clean up expired approval requests (unchanged)
 const cleanupExpiredApprovals = async (req, res) => {
   try {
     const now = new Date();
@@ -271,7 +315,7 @@ const cleanupExpiredApprovals = async (req, res) => {
   }
 };
 
-// Upload photo for existing visitor
+// Upload photo for existing visitor (unchanged)
 const uploadVisitorPhoto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -312,7 +356,6 @@ const uploadVisitorPhoto = async (req, res) => {
   }
 };
 
-
 module.exports = {
     approveVisitor,
     rejectVisitor,
@@ -320,4 +363,4 @@ module.exports = {
     getVisitorsByStatus,
     getPendingApprovals,
     cleanupExpiredApprovals
-}
+};

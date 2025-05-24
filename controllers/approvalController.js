@@ -1,8 +1,8 @@
-const db = require('../database/connection');  // ← Add this line
+const db = require('../database/connection');  
 const QRCode = require('qrcode');
-// Initialize models
-const VisitorModel = require('../models/Visitor');  // ← Add this line
-const EmployeeModel = require('../models/Employee'); // ← Add this line
+
+const VisitorModel = require('../models/Visitor');  
+const EmployeeModel = require('../models/Employee'); 
 
 const visitorModel = new VisitorModel(db);  
 const employeeModel = new EmployeeModel(db); 
@@ -11,7 +11,7 @@ const employeeModel = new EmployeeModel(db);
 const approveVisitor = async (req, res) => {
   try {
     const { token } = req.params;
-    const { remarks } = req.body || {}; // Optional approval remarks
+    const { remarks } = req.body || {};
 
     // Find visitor by approval token
     const visitor = await db
@@ -45,7 +45,7 @@ const approveVisitor = async (req, res) => {
       status: 'approved',
       approved_at: new Date(),
       approval_remarks: remarks || null,
-      approval_token: null, // Clear token after use
+      approval_token: null, 
       updated_at: new Date()
     });
 
@@ -106,7 +106,7 @@ const rejectVisitor = async (req, res) => {
       status: 'rejected',
       rejected_at: new Date(),
       rejection_reason: reason || 'No reason provided',
-      approval_token: null, // Clear token after use
+      approval_token: null, 
       updated_at: new Date()
     });
 

@@ -52,7 +52,7 @@ const createVisitor = async (req, res) => {
       host_employee_name: hostEmployeeName,
       host_department: hostDepartment,
       company_name: companyName,
-      photo_path: null, // Will be updated when photo is uploaded
+      photo_path: null, // will get update when photo gets uploaded
       visitor_badge_id: visitorBadgeId,
       status: 'pending',
       approval_token: approvalToken,
@@ -117,7 +117,7 @@ const uploadVisitorPhoto = async (req, res) => {
   }
 };
 
-// All other controller functions remain the same...
+
 const getAllVisitors = async (req, res) => {
   try {
     const visitors = await db
@@ -254,5 +254,4 @@ module.exports = {
   getVisitorById,
   checkInVisitor,
   checkOutVisitor
-  // Add other functions as needed
 };

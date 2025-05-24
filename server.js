@@ -11,6 +11,7 @@ const db = require('./database/connection');
 const visitorRoutes = require('./routes/visitors');
 const employeeRoutes = require('./routes/employees');
 const approvalRoutes = require('./routes/approvals');
+const preApprovalRoutes = require('./routes/preApprovals');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/visitors', visitorRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/approvals', approvalRoutes);
+app.use('/api/preapprovals', preApprovalRoutes);
 
 // Test database connection
 app.get('/test-db', async (req, res) => {

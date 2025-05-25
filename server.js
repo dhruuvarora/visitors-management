@@ -33,7 +33,7 @@ app.use('/api/preapprovals', preApprovalRoutes);
 app.use('/api/test-email', testEmailRoutes);
 
 // Test database connection
-app.get('/test-db', async (req, res) => {
+app.get('/connection', async (req, res) => {
   try {
     // Test with a simple query
     const result = await db.selectFrom('visitors').selectAll().limit(1).execute();
@@ -47,35 +47,11 @@ app.get('/test-db', async (req, res) => {
   }
 });
 
-app.get('/health', (req,res) =>{
-  res.json({
-    message:"App is Healthy"
-  })
-})
-
 // Basic route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Visitor Management System API',
     version: '1.0.0',
-    endpoints: [
-      'POST /api/visitors - Register new visitor',
-      'GET /api/visitors - Get all visitors',
-      'GET /api/visitors/search?query=name - Search visitors',
-      'GET /api/visitors/status/:status - Get visitors by status',
-      'GET /api/visitors/approve/:token - Approve visitor',
-      'POST /api/visitors/reject/:token - Reject visitor',
-      'GET /api/visitors/:id - Get visitor by ID',
-      'PUT /api/visitors/:id - Update visitor',
-      'DELETE /api/visitors/:id - Delete visitor',
-      'POST /api/visitors/:id/checkin - Check in visitor',
-      'POST /api/visitors/:id/checkout - Check out visitor',
-      'POST /api/employees - Create employee',
-      'GET /api/employees - Get all employees',
-      'GET /api/employees/:id - Get employee by ID',
-      'PUT /api/employees/:id - Update employee',
-      'DELETE /api/employees/:id - Delete employee'
-    ]
   });
 });
 

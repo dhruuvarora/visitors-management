@@ -1,4 +1,4 @@
-# 🏢 Visitor Management System (VMS) - Node.js & Express
+# 🏢 Visitor Management System (VMS)
 
 A scalable and modular backend API for managing visitors in corporate environments. It handles visitor registration, approval workflows, QR-based check-ins/outs, pre-approvals, and notification via email.
 
@@ -98,3 +98,37 @@ Fetches a list of all pre-approved visits.
 
 ---
 
+![all-details-of-user](https://github.com/user-attachments/assets/e59d0a5a-d56d-4479-9165-edad01bbfbd0)
+![approval-gmail(1)](https://github.com/user-attachments/assets/11f92a17-6b78-40d4-a736-5b3fa9310084)
+![approve-visitor](https://github.com/user-attachments/assets/aed1c4a4-bba6-4927-8427-c29b5f653611)
+
+
+![checkedin](https://github.com/user-attachments/assets/5f4a3ea9-00a5-4953-9d9a-afd578397d97)
+
+![checked-out](https://github.com/user-attachments/assets/a3b727d6-ec3a-4217-914f-e39946d83f9e)
+
+![employee-creation](https://github.com/user-attachments/assets/1c78e84c-0ed7-4560-a1e6-a44c94c2a072)
+
+![employee-pre-approval-check](https://github.com/user-attachments/assets/1d99d452-67ba-404c-a470-27ffb8cc9c44)
+
+![get-all-pending-visitors](https://github.com/user-attachments/assets/8780c7d3-be88-4a70-9bd7-46b317fd0f54)
+
+![pre-approval-mail](https://github.com/user-attachments/assets/cec0c774-292d-4a4b-a444-8d10923a5a46)
+
+![pre-approval-visitor](https://github.com/user-attachments/assets/d347c06f-00e4-4ab9-bb05-af65ee3a2781)
+
+![QRcode-details](https://github.com/user-attachments/assets/e22fef9b-cdc3-49bb-8676-26e4c9457dab)
+
+![reject-checkin-not-approve](https://github.com/user-attachments/assets/80a3bfcf-f918-4d4f-8a86-ca7c61503bbe)
+
+![rejection-email](https://github.com/user-attachments/assets/b6570778-307c-41d4-8996-e180d1ddd6c6)
+
+![rejection-reason](https://github.com/user-attachments/assets/438be245-fe01-48b5-b2a4-94c0912a1932)
+
+![rejection-test-visitor](https://github.com/user-attachments/assets/ec99a761-bf1f-4333-9b9f-b832974b6e3f)
+
+![upload-visitor-image](https://github.com/user-attachments/assets/708ef5d3-1db6-4542-9323-d23a72325093)
+
+![visitor-2-picture](https://github.com/user-attachments/assets/d106fe69-14ac-4a75-bfdd-95b97fcea019)
+
+![visitor-creation](https://github.com/user-attachments/assets/fa35910f-23dc-4bcd-b335-fc25d07e742a)

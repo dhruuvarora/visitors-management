@@ -106,36 +106,58 @@ const approveVisitor = async (req, res) => {
 const rejectVisitor = async (req, res) => {
   try {
     const { token } = req.params;
-    const { reason } = req.body; // Rejection reason
+    const { reason } = req.body;
+
+    console.log('🔍 Starting rejection process...');
+    console.log('Token received:', token);
+    console.log('Reason received:', reason);
 
     // Find visitor by approval token
+    console.log('📋 Searching for visitor with token...');
     const visitor = await db
       .selectFrom('visitors')
       .selectAll()
       .where('approval_token', '=', token)
       .executeTakeFirst();
 
+    console.log('👤 Visitor found:', visitor ? 'YES' : 'NO');
+    if (visitor) {
+      console.log('Visitor details:', {
+        id: visitor.id,
+        name: visitor.full_name,
+        status: visitor.status,
+        email: visitor.email
+      });
+    }
+
     if (!visitor) {
+      console.log('❌ No visitor found with token:', token);
       return res.status(404).json({ error: 'Invalid approval token' });
     }
 
     // Check if visitor is in pending status
+    console.log('🔄 Checking visitor status...');
     if (visitor.status !== 'pending') {
+      console.log('❌ Visitor status is not pending:', visitor.status);
       return res.status(400).json({ 
         error: `Visitor is already ${visitor.status}. Cannot reject.`
       });
     }
 
     const rejectionReason = reason || 'No reason provided';
+    console.log('📝 Rejection reason:', rejectionReason);
 
     // Update visitor status to rejected
-    await visitorModel.update(visitor.id, {
+    console.log('💾 Updating visitor status...');
+    const updateResult = await visitorModel.update(visitor.id, {
       status: 'rejected',
       rejected_at: new Date(),
       rejection_reason: rejectionReason,
       approval_token: null, 
       updated_at: new Date()
     });
+
+    console.log('✅ Update result:', updateResult);
 
     // Prepare response data
     const responseData = {
@@ -153,22 +175,33 @@ const rejectVisitor = async (req, res) => {
 
     // Send rejection email to visitor if email is provided
     if (visitor.email) {
+      console.log('📧 Attempting to send rejection email...');
       try {
         await emailService.sendRejectionEmail(visitor, rejectionReason);
         console.log(`✅ Rejection email sent to: ${visitor.email}`);
         responseData.emailSent = true;
       } catch (emailError) {
         console.error('❌ Failed to send rejection email:', emailError);
-        // Don't fail the rejection if email fails, but log the error
         responseData.emailError = 'Failed to send email notification';
       }
+    } else {
+      console.log('📧 No email provided, skipping email notification');
     }
 
+    console.log('🎉 Rejection completed successfully');
     res.json(responseData);
 
   } catch (error) {
-    console.error('Error rejecting visitor:', error);
-    res.status(500).json({ error: 'Failed to reject visitor' });
+    console.error('💥 REJECTION ERROR DETAILS:');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error code:', error.code);
+    console.error('Full error object:', error);
+    
+    res.status(500).json({ 
+      error: 'Failed to reject visitor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
